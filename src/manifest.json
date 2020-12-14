@@ -1,9 +1,9 @@
 {
-  "name": "FACEIT Enhancer",
+  "name": "FACEIT Enhancer (fork)",
   "description": "Enhances the FACEIT experience and adds useful features.",
-  "version": "2.10.17",
+  "version": "1.2",
   "manifest_version": 2,
-  "homepage_url": "https://faceit-enhancer.com/",
+  "homepage_url": "https://github.com/AntiPaste/faceit-enhancer",
   "minimum_chrome_version": "51",
   "applications": {
     "gecko": {

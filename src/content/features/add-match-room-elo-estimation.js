@@ -15,7 +15,6 @@ import {
   setFeatureAttribute,
   setStyle
 } from '../helpers/dom-element'
-import { calculateRatingChangeMemoized } from '../helpers/elo'
 import storage from '../../shared/storage'
 
 const FEATURE_ATTRIBUTE = 'elo-estimation'
@@ -98,9 +97,14 @@ export default async parent => {
         averageElo = Math.floor(totalElo / memberElos.length)
       }
 
+      const { winProbability } = match.teams[factionName].stats
+      const eloGain = Math.round(50 * (1 - winProbability))
+
       return {
         factionName,
-        averageElo
+        averageElo,
+        winProbability,
+        eloGain
       }
     })
   )
@@ -112,13 +116,9 @@ export default async parent => {
   }
 
   let eloElements = factions.map((faction, i) => {
-    const { factionName, averageElo } = faction
+    const { factionName, averageElo, winProbability, eloGain } = faction
 
     const opponentAverageElo = factions[1 - i].averageElo
-    const { winPoints, lossPoints } = calculateRatingChangeMemoized(
-      averageElo,
-      opponentAverageElo
-    )
 
     const factionNicknameElement = select(
       `h2[ng-bind*="${
@@ -142,10 +142,11 @@ export default async parent => {
 
     const eloElement = (
       <div className="text-muted text-md" style={{ 'margin-top': 6 }}>
-        Avg. Elo: {averageElo} / Diff: {eloDiff > 0 ? `+${eloDiff}` : eloDiff}
+        Avg. Elo: {averageElo} / Diff: {eloDiff > 0 ? `+${eloDiff}` : eloDiff} /
+        Probability: {winProbability * 100}%
         <br />
-        <span>Est. Win: +{winPoints}</span> /{' '}
-        <span>Est. Loss: {lossPoints}</span>
+        <span>Est. Win: +{eloGain}</span> /{' '}
+        <span>Est. Loss: {50 - eloGain}</span>
       </div>
     )
 
@@ -163,7 +164,7 @@ export default async parent => {
       setFeatureAttribute(FEATURE_ATTRIBUTE, scoreElement)
 
       const points =
-        parseFloat(scoreElement.textContent) === 1 ? winPoints : lossPoints
+        parseFloat(scoreElement.textContent) === 1 ? eloGain : 50 - eloGain
 
       const pointsElement = (
         <div className="text-lg">{points > 0 ? `+${points}` : points}</div>
